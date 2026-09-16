@@ -1,0 +1,22 @@
+name: Telegram CI Notify
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions: read-all
+
+jobs:
+  notify:
+    uses: ./.github/workflows/telegram-notify-reusable.yml
+    with:
+      message: |
+        CI ${{ github.event.workflow_run.conclusion }}
+        Repo: ${{ github.repository }}
+        Branch: ${{ github.event.workflow_run.head_branch }}
+        Actor: ${{ github.event.workflow_run.actor.login }}
+        Run: ${{ github.event.workflow_run.html_url }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

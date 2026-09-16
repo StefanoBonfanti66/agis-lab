@@ -1,0 +1,97 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'push' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect Node project
+        id: detect
+        run: |
+          if [ -f app/package.json ]; then
+            echo "has_package_json=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_package_json=false" >> "$GITHUB_OUTPUT"
+            echo "No app/package.json found. Skipping deploy."
+          fi
+
+      - name: Detect Vercel secrets
+        id: vercel_secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && \
+             [ -n "$VERCEL_ORG_ID" ] && \
+             [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Missing Vercel secrets. Skipping deploy."
+          fi
+
+      - name: Setup Node
+        if: >-
+          steps.detect.outputs.has_package_json == 'true' &&
+          steps.vercel_secrets.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        if: >-
+          steps.detect.outputs.has_package_json == 'true' &&
+          steps.vercel_secrets.outputs.ready == 'true'
+        working-directory: app
+        run: npm install --global vercel@latest
+
+      - name: Install dependencies
+        if: >-
+          steps.detect.outputs.has_package_json == 'true' &&
+          steps.vercel_secrets.outputs.ready == 'true'
+        working-directory: app
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Pull Vercel environment
+        if: >-
+          steps.detect.outputs.has_package_json == 'true' &&
+          steps.vercel_secrets.outputs.ready == 'true'
+        working-directory: app
+        run: >-
+          vercel pull --yes --environment=production
+          --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build project artifacts
+        if: >-
+          steps.detect.outputs.has_package_json == 'true' &&
+          steps.vercel_secrets.outputs.ready == 'true'
+        working-directory: app
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        if: >-
+          steps.detect.outputs.has_package_json == 'true' &&
+          steps.vercel_secrets.outputs.ready == 'true'
+        working-directory: app
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
