@@ -3,3 +3,24 @@ dist/
 .env
 *.local
 .vercel/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Output generati (inventario LAN: CSV/HTML/XLSX con IP, MAC, seriali)
+lan_inventory_output/
+*.db
+*.db-journal
+*.xlsx
+*.xls
+
+# Scan di rete grezzi
+*_archive_old/
+scans/
+*.nmap
+nmap_*.xml
+*_inventory.xml
+
+# Log
+*.log
