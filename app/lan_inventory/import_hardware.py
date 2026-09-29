@@ -145,27 +145,40 @@ def host_key(name: str) -> str:
     return str(name or "").strip().split(".")[0].strip().upper()
 
 
-def inventory_ips(workbook) -> dict:
-    """IP degli host gia' noti dall'inventario di rete, indicizzati per hostname.
+def mac_key(mac: str) -> str:
+    return str(mac or "").strip().upper()
 
-    L'inventario di rete resta la fonte dell'IP: il collector hardware non
-    deve poterlo sovrascrivere con un indirizzo diverso da quello dichiarato.
+
+def inventory_index(workbook) -> tuple[dict, dict]:
+    """Indice dell'inventario di rete, per hostname e per MAC.
+
+    L'IP non e' un'identita': sulle macchine in leasing ruota (stesso MAC,
+    .43 -> .41 -> .40 in due settimane), quindi il join avviene sul MAC quando
+    c'e' e l'hostname fa solo da ripiego. L'IP letto sul PC e' piu' fresco di
+    quello dichiarato nell'inventario, quindi finisce nella colonna IP e
+    l'eventuale valore diverso dell'inventario viene segnalato in Status.
     """
+    empty = ({}, {})
     if "Inventory" not in workbook.sheetnames:
-        return {}
+        return empty
     ws = workbook["Inventory"]
     header = [str(c.value or "").strip().lower() for c in ws[1]]
-    if "hostname" not in header or "ip" not in header:
-        return {}
-    host_col, ip_col = header.index("hostname"), header.index("ip")
-    out = {}
+    if "ip" not in header:
+        return empty
+    ip_col = header.index("ip")
+    host_col = header.index("hostname") if "hostname" in header else None
+    mac_col = header.index("mac") if "mac" in header else None
+    by_host, by_mac = {}, {}
     for row in ws.iter_rows(min_row=2, values_only=True):
-        host = row[host_col] if host_col < len(row) else None
-        if not host:
-            continue
-        ip = row[ip_col] if ip_col < len(row) else None
-        out[host_key(host)] = str(ip or "")
-    return out
+        ip = str(row[ip_col] or "") if ip_col < len(row) else ""
+        host = row[host_col] if host_col is not None and host_col < len(row) else None
+        mac = row[mac_col] if mac_col is not None and mac_col < len(row) else None
+        entry = {"ip": ip, "mac": str(mac or "").strip().upper()}
+        if host:
+            by_host[host_key(host)] = entry
+        if entry["mac"]:
+            by_mac[entry["mac"]] = entry
+    return by_host, by_mac
 
 
 def write_sheet(workbook, name: str, rows: list[list]) -> int:
@@ -187,13 +200,22 @@ def write_sheet(workbook, name: str, rows: list[list]) -> int:
     return len(rows)
 
 
-def fill_workbook(workbook, payloads: list[dict], ips: dict) -> dict:
+def fill_workbook(workbook, payloads: list[dict], index: tuple) -> dict:
     hardware, disks, networks = [], [], []
     for data in payloads:
         host = str(data.get("computer_name", ""))
         collected = data.get("collected_at_utc") or data.get("collected_at") or ""
         collected = ps_date(collected) or collected
-        ip = ips.get(host_key(host)) or pick_ip(data.get("network") or [])
+        nics = data.get("network") or []
+        observed = pick_ip(nics)
+        mac = next((nic_mac(n) for n in nics if nic_mac(n)), "")
+        inv_by_host, inv_by_mac = index
+        entry = inv_by_mac.get(mac_key(mac)) or inv_by_host.get(host_key(host)) or {}
+        inv_ip = entry.get("ip", "")
+        ip = observed or inv_ip
+        status = "OK"
+        if observed and inv_ip and observed != inv_ip:
+            status = f"IP differente (inventario {inv_ip})"
         hardware.append([
             ip, host, host, data.get("domain", ""), data.get("manufacturer", ""),
             data.get("model", ""), data.get("serial_number", ""),
@@ -203,7 +225,7 @@ def fill_workbook(workbook, payloads: list[dict], ips: dict) -> dict:
             data.get("cpu_threads", ""), data.get("ram_total_gb", ""),
             ps_date(data.get("os_install_date")),
             data.get("os_last_boot") or data.get("os_last_boot_utc", ""),
-            "OK", "", collected,
+            status, "", collected,
         ])
         for disk in data.get("disks") or []:
             disks.append([
@@ -229,9 +251,11 @@ def fill_workbook(workbook, payloads: list[dict], ips: dict) -> dict:
 def fill_existing(workbook_path: Path, out: Path, payloads: list[dict]) -> int:
     """Riempie i fogli hardware di un inventario di rete gia' esistente.
 
-    L'IP resta quello dichiarato nell'inventario di rete: e' la fonte
-    autorevole e il collector hardware non deve sostituirla. Il file
-    originale non viene mai toccato, si scrive una copia.
+    L'IP scritto e' quello osservato sul PC, che e' piu' fresco di quello
+    nell'inventario: l'IP ruota sulle macchine in leasing, quindi non puo'
+    essere trattato come un'identita'. Se i due valori differiscono, la
+    differenza resta tracciata nella colonna Status. Il file originale non
+    viene mai toccato, si scrive una copia.
     """
     try:
         from openpyxl import load_workbook
@@ -244,17 +268,18 @@ def fill_existing(workbook_path: Path, out: Path, payloads: list[dict]) -> int:
         return 1
 
     workbook = load_workbook(workbook_path)
-    ips = inventory_ips(workbook)
-    written = fill_workbook(workbook, payloads, ips)
+    index = inventory_index(workbook)
+    written = fill_workbook(workbook, payloads, index)
     out.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(out)
     print(f"Workbook aggiornato: {out}")
     for name, count in written.items():
         print(f"  {name}: {count} righe")
-    if not ips:
-        print("  ! foglio 'Inventory' assente: l'IP arriva dal collector.")
+    if not index[0] and not index[1]:
+        print("  ! foglio 'Inventory' assente o senza hostname/MAC: "
+              "l'IP arriva dal collector e non puo' essere confrontato.")
     raccolti = {host_key(d.get("computer_name", "")) for d in payloads}
-    fuori = sorted(h for h in raccolti - set(ips) if h)
+    fuori = sorted(h for h in raccolti - set(index[0]) if h)
     if fuori:
         print(f"  host raccolti ma assenti dall'inventario di rete: {len(fuori)}")
         for host in fuori:
