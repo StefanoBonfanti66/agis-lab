@@ -1,40 +1,69 @@
-# Project: NOME_PROGETTO
+# Project: agis-lab
 
-Template per nuovi progetti — personalizza questo file dopo aver clonato il repository.
-Compila le sezioni sottostanti per tracciare obiettivi, decisioni e progresso delle sessioni OpenCode.
+Cartella di lavoro per Agis Lab (Milano) — ricognizione infrastruttura IT Vetronaviglio e pipeline lan_inventory (inventario di rete multi-cliente).
 
 ## Obiettivo
-- Scopo:
-- Stato attuale:
-- Risultato atteso della sessione:
-
-## Stack e vincoli
-- Frontend: React 19 + TypeScript + Vite + TailwindCSS
-- Backend: Supabase (Auth, Postgres RLS, Storage)
-- Database: Postgres con RLS multi-tenancy
-- Infra: Vercel + GitHub Actions
-- Vincoli tecnici:
-- Vincoli di piano/free tier:
+- Scopo: supportare la ricognizione preliminare IT Vetronaviglio (lan_inventory) e la collaborazione con Agis Lab.
+- Stato attuale: lan_inventory v1.8.0 testato su rete reale (~100 dispositivi, 64 alert); NDA sottoscritto da entrambe le Parti e verificato; email riscontro NDA inviata ad Agis Lab (23/09) con allegati LAN Inventory — **in attesa riscontro**.
+- Risultato atteso della sessione: NDA firmato + email riscontro inviata — **COMPLETATO**.
 
 ## Decisioni prese
-- [YYYY-MM-DD] ...
+- [2026-09-16] NDA: durata vincolo 5 anni; nessun riferimento alla vertenza Abbiati; Parte Divulgante = solo Vetronaviglio.
+- [2026-09-16] Compilazione NDA delegata da Bettina a Stefano; responsabilità in capo a Bettina.
+- [2026-09-16] Terminologia "sede Vetrodom" → "sede Vetronaviglio" in docs (Vetrodom resta dominio AD nei dati di scansione).
+- [2026-09-16] Canale consegna credenziali/registro accessi: da concordare con Agis Lab (account nominativi, MFA, tracciamento, no password in chiaro via email).
+- [2026-09-16] NDA integrazioni Agis Lab: legale rappresentante Viviano all'art.1; 5 anni da cessazione Finalità; condivisione con dipendenti/collaboratori/consulenti vincolati; conservazione per obblighi legge e backup; nomina responsabile GDPR art.28 in accordo separato; riferimenti fornitori → "fornitori terzi"; luogo/data/firme.
+- [2026-09-28] La connettività fissa Vetronaviglio NON è FTTH consumer ma un circuito **dedicato P2P "OneNet Enterprise Fibra P2P 200 Mega"** (8 IP statici, SLA, 36 mesi) → l'upgrade non è un cambio di piano commerciale ma una nuova quotazione dedicata. Controparte contrattuale oggi **Fastweb S.p.A.** (Vodafone Italia incorporata dal 01/01/2026).
+- [2026-09-28] Non reinviare mail pesanti verso agislab.it (DMARC `p=quarantine;pct=25`, nessun rimbalzo). Protocollo: prima una bozza leggera, poi eventuali documenti via canale cifrato.
+- [2026-09-28] Le specifiche RAM/CPU dei PC **non esistono** nella raccolta dati NMAP: servono raccolta attiva (PowerShell/WinRM) in visita, o GPO/GLPI. Smartphone: RAM/CPU non utili, i dati utili stanno nei portali MDM e nelle SIM già in repo.
+- [2026-09-28] Nessun accesso Exchange 365 disponibile in questo ambiente: la checklist deliverability è una guida da eseguire manualmente, non un report.
+- [2026-09-28] **CASO C CHIUSO** — reinvio alleggerito (3 allegati / ~67 KB) della mail del 23/09 (15 allegati / ≈20,78 MB) **arrivato ad Agis Lab**. Causa del mancato recapito = **volume/numero allegati**, NON l'allineamento DMARC (identico e fallito in entrambi i casi). Ipotesi quarantine-DMARC smentita. Regola permanente: mai più mail pesanti verso `@agislab.it` in un colpo solo; i 13 contratti (≈18,7 MB) via canale cifrato o più invii.
+- [2026-09-28] La soglia pratica verso `agislab.it` non è nota con precisione (test effettuato solo a ~67 KB e a ≈20,78 MB, entrambi estremi): ipotizzare un tetto prudenziale di pochi MB / pochi allegati finché Agis Lab non conferma.
+- [2026-09-28] **Ambiente di posta confermato = Exchange Online (Microsoft 365), non on-premise.** L'utente è amministratore del tenant. Quindi la diagnosi del caso A si fa con **Exchange Online PowerShell** (`Connect-ExchangeOnline`) + portale EXAC, non con console di server.
+- [2026-09-28] Script di sola lettura creato per il caso A: `app/email-diagnostics/check_caso_bettina.ps1` — raccoglie in un unico report le impostazioni indesiderata (bloccati/attendibili/bypass), regole posta in arrivo, quarantena, regole tenant, **confronto diretto con la casella funzionante** e message trace. Validato solo sintatticamente (parser PowerShell: OK) e provato senza modulo EXO (degrada pulito elencando i controlli non eseguiti): i dati reali si ottengono eseguendolo dall'account amministratore.
+- [2026-09-28] Ordine di diagnosi del caso A cambiato: **prima il test dal vivo** (nuova email di prova da Viviano a `b.solitodesolis@`, idealmente una di confronto a `s.bonfanti@`), poi la traccia. Il "ricordare una data storica" è il vero ostacolo, non la configurazione del tenant.
+- [2026-09-28] Il PC dell'amministratore è **Ubuntu** → la diagnosi EXO si esegue con **PowerShell 7 (`pwsh`)**, non Windows PowerShell. Su Linux non si apre il browser integrato: usare il flusso **device code** `Connect-ExchangeOnline -UserPrincipalName … -Device -ShowBanner:$false` (apre `https://microsoft.com/devicelogin` su un altro dispositivo). Se il tenant blocca i device code (frequente con *Accesso sicuro* attivo), alternativa = app Azure AD con `-AppId`/`-Organization`. Lo script richiede pwsh 7 (`#Requires -Version 7.0`): lanciarlo con `pwsh -NoProfile -File …`, senza `-ExecutionPolicy` (non applicata su Linux).
+- [2026-09-28] **Recap interno a Federico e Bettina INVIATO il 28/09/2026 con variazioni dell'autore**: tolta la sezione "cosa mi serve da voi", l'autore si assume 3 impegni (1. quotazione banda richiesta a Cartel, 2. creazione dell'inventario dettagliato dei PC, 3. accordo con Alessandro per una mail di test). Nessuna azione più richiesta a Federico/Bettina. Testo canonico in `docs/project/email-recap-video-call-agis-lab.md` ("Testo inviato").
+- [2026-09-29] **CASO A CHIUSO — le mail di Agis Lab non "non arrivavano": arrivavano in Posta indesiderata.** Analisi fatta dall'utente sulla casella di Bettina. Rimedio applicato: **regola di non-blocco per il dominio `agislab.it`** su `b.solitodesolis@vetronaviglio.it` (sezione Posta indesiderata → mittenti/domini attendibili). Conseguenze da tenere a mente: (a) vale per i **messaggi futuri**, non sposta quelli già in Junk; (b) è **per-singola-casella** → le altre caselle del tenant (es. `f.rosi@`) non sono coperte; (c) la **causa di fondo resta lato mittente** (classificazione/reputazione `agislab.it`), il rimedio è solo locale. Dettagli ed evidenze in `docs/project/email-deliverability-checklist.md` §4-bis.
+- [2026-09-29] Il caso C (mail del 23/09) resta **spiegato a parte**: direzione opposta (ZBN → Agis Lab), causa = volume/numero allegati. Le due cause non vanno
+- [2026-09-29] **Raccolta hardware PC: metodo push (share + GPO) confermato come quello giusto** — la porta WinRM è aperta su 0 host su 114, quindi il pull non è oggi un'opzione. Lo script gira come SYSTEM via task pianificato e scrive un JSON per macchina sulla share interna: nessun dato esce dalla rete, nessun agente installato, nessuna porta aperta.
+- [2026-09-29] **Nessun dato personale nella raccolta automatica.** `asset_tag` non viene più valorizzato con l'utente Windows (non è un asset tag, è dato personale, ed è vuoto sotto SYSTEM) e `logged_user` è stato rimosso dal JSON sulla share. L'`asset_tag` del template (`VN-PC-014`) lo stabilisce ZBN a mano: non esce da WMI.
+- [2026-09-29] **Via GPO l'installer va lanciato con `-Script <UNC del collettore nella SYSVOL>`.** La Startup folder della GPO riceve il solo installer, non anche `collect_hardware.ps1`: senza quel parametro il `Copy-Item` fallirebbe su tutti i PC e la raccolta non partirebbe.
+- [2026-09-29] **Un "funziona" senza prove è un falso "funziona".** Il test precedente dava solo "exit 0" e così non aveva visto che l'Excel era interamente sfalsato di una colonna. Da ora la verifica della raccolta guarda il **contenuto delle celle**, non il codice di uscita. Stessa logica applicata agli script: share non scrivibile → probe + `throw` in installazione, `collect.log` + `exit 1` in raccolta. mescolate in un unico racconto.
 
 ## Lavoro svolto
-- File creati:
-- File modificati:
-- Test eseguiti:
+- File creati: `docs/leads/email-it-impresa-followup.md`, `docs/leads/email-agis-nda.md`, `docs/project/accordo-riservatezza-agis-lab.{md,html,pdf}`, `docs/changelog.md`, `docs/_INDEX.md`, `docs/overview.md`, `app/lan_inventory/`.
+- File modificati: `docs/leads/agis-lab-risposte.{md,html}`, `docs/leads/index.md`, `AGENTS.md` (Current Focus), `opencode.json`, `docs/project/accordo-riservatezza-agis-lab.{md,html,pdf}` (rigenerati post-risposta Agis Lab), `docs/leads/email-agis-nda.md` (aggiornata).
+- Test eseguiti: lan_inventory pipeline v1.8.0 live su rete Vetronaviglio (snapshot #1→#3, 3 Excel per-cliente); PDF NDA generato con `/usr/bin/google-chrome-stable` headless.
+
+## Sessione 2026-09-28 — video call con Viviano (Agis Lab)
+Richieste: (1) verifica upgrade banda, (2) specifiche tecniche PC fissi e mobili, (3) mail di Agis Lab che non arrivano a Bettina e di Giovanni Bo in indesiderata, (4) l'email a Viviano sembra non essere arrivata, (5) recuperare il draft precedente.
+- Letti i contratti su `//SRVFS-VN/Data/IT/Fornitori/Vodafone/`: identificato il P2P 200 Mega (`Offerta_Vodafone_6182616.pdf`, offerta 2024N8VEPM4L). Le 5 fatture in `Fatture/` sono tutte **mobile**, nessuna voce fibra.
+- Documenti prodotti: `docs/project/banda-fibra-upgrade.md`, `docs/project/specifiche-tecniche-parco.md`, `docs/project/email-deliverability-checklist.md`, `docs/leads/email-agis-nda-firmato-ridotta.md`.
+- Bozza Gmail per Viviano creata il 28/09/2026 (`draft_id r-2942274731861020071`, 3 allegati ~67 KB) — ✅ **INVIATA manualmente da Gmail il 28/09/2026 e CONFERMATA ARRIVATA** ad Agis Lab. Ipotesi di quarantena/silent-drop **smentita**: causa = volume allegati.
+- Bozza Gmail di recap interno a **Federico Rosi e Bettina**: versione 1 (`r-5654002752710648645`, `message_id 1a0e7e8e7c70b315`) scartata dall'utente come troppo tecnica; versione 2 (`r7721289056575567552`, `message_id 1a0e7f33be1df0c7`) superata; versione 3 (`draft_id r-7745581952445514843`, `message_id 1a0e804819a9ae0c`, zero allegati) **INVIATA dall'utente il 28/09/2026 CON VARIAZIONI** (3 blocchi, tolta la sezione "cosa mi serve da voi", 3 impegni in carico a Stefano: quotazione a Cartel, inventario dettagliato PC, mail di test con Alessandro). Le bozze Gmail 1, 2 e 3 sono superate: **non inviarle**. Doc con testo canonico inviato: `docs/project/email-recap-video-call-agis-lab.md`.
+- Verificato che l'email del 23/09 (15 allegati, 20,78 MB) **non ha rimbalzo DSN** in Gmail → coerente con quarantine lato Agis Lab o filtro silenzioso.
+- **Casi B chiusi il 28/09/2026**: (C) la mail alleggerita ad Agis Lab **è arrivata** → causa del mancato recapito del 23/09 = volume/numero allegati, non DMARC; (B) le mail di **Giovanni Bo non arrivavano più** → l'utente ha inserito **mittente e dominio tra i mittenti attendibili** in Exchange e ora **arrivano**. Rimedio locale, causa di fondo resta lato mittente; nessuna message trace eseguita.
+- **Rimane aperto solo il caso A**: i messaggi di Agis Lab che non arrivano a Bettina (lato Exchange Online). L'utente è amministratore del tenant: la diagnosi è stata riscritta come runbook EXO (§4 della checklist) e automatizzata in `app/email-diagnostics/check_caso_bettina.ps1`. Serve un **test dal vivo** (nuova mail di prova da Viviano a `b.solitodesolis@`) per avere una data certa su cui interrogare la traccia.
+- Aggiornati `docs/_INDEX.md` e `docs/leads/index.md`.
 
 ## TODO aperti
-1. ...
-2. ...
+1. **Recap interno inviato** ✅ (28/09/2026, con variazioni). Resta eseguire i 3 impegni presi: quotazione banda da Cartel, raccolta automatica dell'inventario PC, mail di test con Alessandro. Le bozze Gmail 1/2/3 sono superate: **non inviarle**.
+2. **Verifica di chiusura del caso A** (unico residuo del caso): la regola di non-blocco vale per i **messaggi futuri** e non sposta quelli già in Junk. Serve una nuova mail di prova da Viviano a `b.solitodesolis@vetronaviglio.it` (meglio anche una a `s.bonfanti@`) e la conferma che **non finisce più in indesiderata**. L'indirizzo di Giovanni Bo non serve più.
+3. **Verificare se la stessa regola manca su altre caselle** del tenant (es. `f.rosi@vetronaviglio.it`): il rimedio è **per-singola-casella**, quindi il rischio è trasversale. Se altre caselle hanno lo stesso problema, valutare un rimedio **tenant-wide** (regola di trasporto / criterio Defender con bypass per il mittente) invece di N elenchi attendibili.
+4. Chiedere il preventivo di upgrade P2P a Fastweb/Vodafone tramite Riccardo Azzi (VODAMAX SRL Cartel, 3341453239, riccardo.azzi@cartel.it), verificando prima la scadenza del vincolo 36 mesi.
+5. **Raccolta automatica delle specifiche: attivata su 1 PC pilota, nessun rollout.** Il pilota è **riuscito il 29/09/2026 su `VETRO33-PC`** (~12:25 CEST): share creata con l'ACL già risolta sul gruppo AD dedicato `VETRODOM\SG-HardwareInventory-Writers` (*Change* sulla condivisione `TEMP-STEFANO`, *Modify* sull'ACL NTFS di `inventory-hardware`, non "Domain Computers"), task installato a mano ed eseguito come `NT AUTHORITY\SYSTEM`, `VETRO33-PC.json` comparso e valido (`schema_version: 1`). Le quantità arrivano come `System.Decimal`: la virgola in console italiana è formattazione locale, non un errore. Il pilota ha usato il **template generico di `opencode-config`** dalla SYSVOL `\\dc01-vn.vetrodom.local\SYSVOL\Vetrodom.local\scripts\hardware-inventory\`, non la copia locale in `app/lan_inventory/` (che ha nomi diversi: `VetrodomInventory`, `Vetrodom HW Inventory`, `-NoCsv`). Ordine di quanto resta: (a) **correggere nel template opencode-config il join dei dischi** — `Win32_DiskDrive.DeviceID` è `\\.\PHYSICALDRIVE0` mentre `Win32_LogicalDisk.DeviceID` è `C:`, quindi modello e seriale del disco escono vuoti; catena corretta `Win32_LogicalDiskToPartition` → `Win32_DiskDriveToDiskPartition`; (b) **chiamata con Agis Lab il 29/09 ore 14:00** sul canale sicuro di consegna (promemoria Google creato), prima di qualunque rollout; (c) batch di 3-5 PC nel gruppo + GPO solo su quelli, un ciclo, verifica, `import_hardware.py --workbook LAN_Inventory_Professional.xlsx` e riconciliazione con `inventory.db`. L'Excel di destinazione **esiste già**: i fogli `Windows Inventory`/`Disks`/`Network` del `LAN_Inventory_Professional.xlsx` erano vuoti (li avrebbe riempiti il vecchio collector WinRM, mai partito perché WinRM è aperto su 0 host su 114) e ora `--workbook` li riempie su una copia.
+6. Attendere riscontro Agis Lab; IT Impresa in attesa; verificare cron nightly refresh (~04:10Z).
+8. Committare/pushare il lavoro della sessione (attende decisione esplicita).
+
 
 ## Problemi aperti
-- Problema:
-- Ipotesi:
-- Blocco attuale:
-
-## File toccati
-- ...
+- Problema: wrapper `/home/sbonfanti/bin/google-chrome` con shebang rotto.
+- Ipotesi: usare `/usr/bin/google-chrome-stable` headless direttamente (già fatto per NDA).
+- Blocco attuale: nessuno rilevante.
 
 ## Prossimo step suggerito
-- ...
+- **Inventario PC:** il pilota e' riuscito il 29/09/2026 su 1 PC (`VETRO33-PC`) e **non** va piu' toccato il dominio senza conferma esplicita dell'utente. I tre atti restanti, in quest'ordine: (1) correggere il join dei dischi nel **template opencode-config** (modello e seriale del disco escono vuoti: `Win32_DiskDrive.DeviceID` e' `\\.\PHYSICALDRIVE0` mentre `Win32_LogicalDisk.DeviceID` e' `C:`, quindi serve la catena `Win32_LogicalDiskToPartition` -> `Win32_DiskDriveToDiskPartition`), (2) **chiamata Agis Lab 29/09 ore 14:00** sul canale sicuro di consegna (promemoria Google creato), prima di qualunque rollout, (3) batch di 3-5 PC aggiunti al gruppo `VETRODOM\SG-HardwareInventory-Writers` con la GPO applicata solo a quelli, un ciclo, verifica. Parametro GPO: `-Script \\dc01-vn.vetrodom.local\SYSVOL\Vetrodom.local\scripts\hardware-inventory\collect_hardware.ps1`. Da dichiarare ad Agis Lab che su ogni PC resta script + task, reversibile con `-Uninstall`.
+- Caso Bettina: chiedere il **test dal vivo** (mail di prova da Viviano a `b.solitodesolis@` + una a `s.bonfanti@`), poi eseguire dal PC Ubuntu `pwsh -NoProfile -File app/email-diagnostics/check_caso_bettina.ps1` dopo `Connect-ExchangeOnline … -Device` e leggere la sezione "confronto".
+- Recap interno: già inviato il 28/09/2026 con variazioni. Restano i 3 impegni in carico: (1) sollecitare la quotazione a Cartel/VODAMAX per la nuova banda, (2) attivare la raccolta automatica dell'inventario PC (share + GPO), (3) concordare con Alessandro la mail di test.
+- Preparare la richiesta di preventivo upgrade P2P 1 Gbps a Fastweb/Vodafone tramite il referente VODAMAX.
