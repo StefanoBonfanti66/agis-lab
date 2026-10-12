@@ -24,3 +24,13 @@ nmap_*.xml
 
 # Log
 *.log
+
+# Backup automatici degli script
+*.bak
+*.bak-*
+
+# Credenziali reali — mai in git
+Vetronviglio.docx
+
+# Export portale M365 (dati personali: utenti, ruoli)
+.playwright-mcp/
