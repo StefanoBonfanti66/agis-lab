@@ -138,6 +138,25 @@ email, il punto (3): **data EOL Windows 10 da verificare con fonte Microsoft**.
    `.135` = Veeam (PDF §4 + OUI VMware in scan), `.227` = Axtrax (hostname in scan).
    Qui vanno solo le **conferme in console**: IP/state di Axtrax, SynetoOS,
    SynetoFileRecovery, le 5 VM del secondario, e identità di `.127`.
+   **✅ Fatto il 13/10 su ENTRAMBI i pannelli (sola lettura):**
+   - **Secondario `.128`/`.129`** — 7 VM (2 ON, 5 OFF; **+2** rispetto ai PDF:
+     `Elabora03_DISMESSO`, `W2008SRV02_DISMESSO`), 13 datastore, pool `hybrid`
+     **degraded con disco guasto dal 24/12/2024**;
+   - **Principale `.125`/`.126`** — 7 VM (6 ON, **Axtrax-VN confermata OFF**),
+     11 datastore, pool **Healthy con spare**, replica **bidirezionale online**
+     (`Syneto-DR ⇄ Syneto-PRI`, `DIV-006` chiusa), **`.127` = IPMI del principale**
+     (`NET-024` chiuso), banner ESXi seriale `SY2000000281`.
+   Esito in [`inventario-syneto-2026-10-12.md`](./inventario-syneto-2026-10-12.md) §10–§11.
+   **✅ Aggiornamento stesso giorno:** anche **entrambi gli ESXi client** sono stati
+   letti (login root, sola lettura): **9 VM per host** — le 7 del pannello + `SynetoOS`
+   (Solaris, guest `syneto-os-01`/`syneto-os-02`) + `SynetoFileRecovery` (CentOS,
+   guest `syneto-lx-luna`), nascoste perché VM di sistema (§10.6, §11.3).
+   **Restano:** **BMC/IPMI del secondario con IP `.130` che collide con `APP-DB-01`**
+   (BMC non raggiungibile → **riassegnare IP BMC = per Agis/Syneto**, §10.1),
+   IP guest di Axtrax (VM spenta), `Serenity disabled` su entrambi, e — dal
+   **portale Syneto Central letto il 13/10** — **maintenance SuperPro scaduta
+   15/11/2025** + add-on Failover scaduto su `os-01` + Serenity Inactive
+   (inventario §12, azione **#17**).
 2. Stato di supporto e licenze dei server Windows: i 5 server sono già nel foglio
    `Windows Inventory` del workbook (`Windows Server 2019 Standard` ⇒ supporto fino a
    09/2029, da confermare per edizione/licenza) — nessuna raccolta nuova.
@@ -148,8 +167,19 @@ email, il punto (3): **data EOL Windows 10 da verificare con fonte Microsoft**.
 
 1. Concordanza con Agis Lab (o con la direzione) della finestra: un ripristino di prova
    tocca dati reali.
-2. In console Veeam: elenco job, frequenza, retention, repository, ultimo job riuscito →
-   riportare **RPO dichiarato vs RPO reale**.
+2. Elenco job, frequenza, RPO: **COMPILATO il 13/10 in sola lettura file-level**
+   (SMB su `VEEAM-VN` = `192.168.24.135`, **non** il `.22` del handover) →
+   `inventario-veeam-2026-10-13.md`: **6 job attivi tutti ≤ 24 h**
+   (DC/FS/ProdWare/AXTRAX 00:00, APP-DEV 22:00, APP-DB 23:00),
+   `Consultazione_NEW` settimanale su 2 VM `_DISMESSO`, 5 job morti,
+   **retention 14 gg / 7–14 cicli + guard 21 gg**,
+   **repository `\\192.168.24.244\veeambk` (QNAP, ~47% pieno)**,
+   **copia offsite GIORNALIERA su `Object storage Cloud`**.
+   **Residui console letti il 13/10 (sola lettura):** endpoint = **Wasabi
+   `eu-central-2`, bucket `vtrn/Veeam`, immutabilità 7 gg, soft-limit 3 TB**;
+   licenza **Enterprise Plus/Subscription, 10/10 istanze, valida fino al
+   29/03/2027**; job morti = Consultazione + Job2-FS **Disabled**,
+   gli altri3 rimossi. **Step 2 COMPLETO — nessun ritorno in console.**
 3. Eseguire un ripristino **livello file** su una cartella non critica, cronometrarlo e
    fotografare l'esito: è la prova che serve per rispondere su «effettiva possibilità di
    ripristinare».
@@ -157,6 +187,30 @@ email, il punto (3): **data EOL Windows 10 da verificare con fonte Microsoft**.
    autonomia, richiedere la risoluzione a IT Impresa insieme agli altri residui (B4).
 5. Aggiornare la riga *Backup* di `docs/project/fornitori-contratti.md` (§2) da 🔴 a 🟡/🟢
    con data ed esito del test.
+
+**Piano proposto il 13/10 (dai rilievi console §10–§11 dell'inventario Syneto) — da
+validare e datare con Agis Lab prima di eseguire:**
+
+- **Prova A — replica Syneto, rischio zero (consigliata come prima prova):**
+  1. Scegliere una VM **spenta e non critica**: `w2003srv02_DISMESSO` (122 GB,
+     datastore `Consultazione`, replica su entrambi i lati) oppure, più piccola,
+     `apps_DISMESSO` (12,9 GB provisionati).
+  2. Dal pannello, ripristinare la VM **da un punto replica** su una **rete isolata**
+     (ESXi ha rete `TEST` sul secondario e `Syneto HC API Network`; in alternativa
+     NIC scollegata — «contrassegnata come scollegata»).
+  3. Accendere, verificare che il guest raggiunga il boot e che i dati siano
+     leggibili, **cronometrare** (RPO reale = etichetta del punto replica usato).
+  4. Fotografare esito + tempistiche, poi **eliminare la VM di test**.
+  5. Attenzione: usare il **Fail over** (cambia il servizio attivo) solo se
+     esplicitamente previsto dal piano approvato; per la prova preferire
+     *restore/clone in isolamento*.
+- **Prova B — Veeam (livello file):** come passi 2–3 sopra, su cartella non critica
+  (`\\SRVFS-VN\TEMP-STEFANO` o simile), con esito fotografato.
+- **Prova C — facoltativa, successiva:** ripristino di una VM di produzione reale
+  (es. `DC02-VN`) sempre in isolamento, solo se la Prova A va a buon fine.
+- **Output atteso:** data finestra, chi esegue (Agis Lab o Stefano con Agis), esito
+  Prova A/B, RPO dichiarato vs reale → aggiornare `fornitori-contratti.md` §2 riga
+  *Backup* e `inventario-syneto-2026-10-12.md` §7 (riga «Ripristinabilità»).
 
 ### B3 — Firewall WatchGuard (punto 4.4)
 
@@ -259,9 +313,13 @@ Risultati → colonna *Licenze* e *Accessi* della riga Microsoft in `fornitori-c
 ### A4 — Telefonia, stampanti, videosorveglianza, controllo accessi (punto 4.7)
 
 1. **Centralino Alascom:** gli accessi al software di gestione sono disponibili dal 23/09 →
-   esportare postazioni, licenze e stato. La manutenzione è terminata: preparare alla
-   direzione **due opzioni** (ricontratto di manutenzione vs migrazione/dismissione) con i
-   relativi costi — è una decisione loro, non nostra.
+   esportare postazioni, licenze e stato. La manutenzione è terminata, ma **è arrivata
+   l'offerta di rinnovo** (13/10, prev. 1130600/2026: canone **1.000,00 €/anno + IVA**,
+   SA inclusa, pagamento anticipato, **validità fino al 31/10/2026**) → presentare alla
+   direzione **due opzioni** (rinnovo a 1.000 €/anno vs migrazione/dismissione) con i
+   relativi costi — è una decisione loro, non nostra. Attenzione: nella stessa offerta la
+   SA è indicata **fino al 31/12/2027** nella riga economica e **fino al 30/06/2028** nel
+   §5 → da chiarire con Alascom prima di firmare.
 2. **Stampanti di rete (4):** per ciascuna aprire la pagina web (`http://<ip>`, credenziali
    da SAPI già in nostro possesso) → modello, seriale, contatore pagine, stato toner. Gli
    IP si leggono dal foglio `Inventory` filtrando `Type = Printer / peripheral`.
@@ -288,6 +346,51 @@ switch mai creato, 3. export ricorrente delle configurazioni firewall). Stile e 
 da `docs/leads/email-it-impresa-followup.md` (messaggio del 16/09 inviato **a nome di
 Bettina**, come richiesto da IT Impresa) — il file storico non va modificato, il nuovo
 testo va in un file separato.
+
+### A8 — Deployment agente Agis Lab (punto 4.10 — nuova attività)
+
+> **Contratto Agis Lab firmato da Bettina** → Agis Lab è il manutentore ufficiale.
+> Alessandro Viviano richiede l'installazione dell'agente su tutte le 23 postazioni censite.
+> Eseguibile **solo come amministratore**, solo dopo validazione umana (Bettina OK ricevuta).
+> Operatore fisico in sede: Stefano Bonfanti.
+
+**File:** `docs/Software/AGENT_705740_V10_15_3_RW.EXE` (~4,4 MB, scaricato da link WeTransfer inviato da Alessandro).
+
+**Passi:**
+
+1. **Pilota su VETRO71-PC** (muletto in allestimento, non in produzione):
+   - Eseguire `AGENT_705740_V10_15_3_RW.EXE` come amministratore.
+   - Verificare: installazione completata, agente visibile nei servizi/processi, nessun impatto sull'operatività del PC.
+   - Registrare esito in `docs/project/agente-deploy-tracker.csv`.
+2. **Se pilota OK:** estendere alle restanti 22 postazioni (12 Desktop + 11 Laptop, 19 su `192.168.24.0/24` + 3 fuori subnet/VPN).
+   - I 4 PC assenti da rete (`VETRO01-PC`, `VETRO21-PC`, `VETRO42-PC`, `VETRO46-PC`): verificare se accesi prima di tentare.
+   - `ACQUISTI` (casa dipendente, VPN): raggiungere per nome host, non per IP.
+   - `VETRO51-PC` e `VETRO21-PC`: verificare connettività prima.
+3. **Report finale:** inviare tracker a Alessandro Viviano con esito per PC e data di completamento.
+
+**Rollback:** prima di ogni installazione verificare se l'exe prevede una routine di disinstallazione; altrimenti annotare percorso di installazione e chiavi di registro per rimozione manuale.
+
+**Tracciamento:** aggiornare `docs/changelog.md` a ogni milestone e `PROJECT_AI_NOTES.md` al checkpoint di completamento.
+
+### A9 — Deployment agente N-able tramite GPO (pilota VETRO53-PC, 29/10/2026)
+
+> Documento dedicato: [`deploy-nable-pilot-2026-10-29.md`](./deploy-nable-pilot-2026-10-29.md).
+> Distribuzione limitata a due piloti (`VETRO71-PC`, `VETRO53-PC`); nessuna estensione generale autorizzata.
+> Servizio Windows di riferimento: `Advanced Monitoring Agent`. L'antivirus è fuori scope di questa fase.
+
+**File nella cartella Startup della GPO** `\\DC01-VN.Vetrodom.local\SYSVOL\Vetrodom.local\Policies\{GUID-GPO}\Machine\Scripts\Startup` (GUID segnaposto, non documentato in repo):
+- `InstallaNable.cmd` (176 byte) — wrapper già registrato come script di avvio.
+- `InstallaNable.ps1` (2118 byte) — logica installazione + verifica servizio.
+- `NableAgent.exe` (4.429.368 byte) — installer dell'agente.
+
+**Evidenze chiave (`VETRO53-PC`):**
+- 29/10/2026 15:42:38 → `ExitCode installer=0`; 15:42:48 → `VERIFICA LOCALE OK: servizio Running, avvio Automatic.`
+- Flusso automatico completo al riavvio, senza avvio manuale del servizio (~44 s dopo l'avvio PC).
+- Verifica del fornitore sulla presenza in console: **in attesa di conferma**.
+
+**Comandi di verifica (runbook dedicato, §5):**
+- Riavvio pilota: `Restart-Computer -ComputerName "VETRO53-PC" -Credential $Cred -Protocol WSMan -Wait -For PowerShell -Timeout 300 -Delay 5 -ErrorAction Stop`.
+- Verifica remota: `Invoke-Command -ComputerName "VETRO53-PC" -Credential $Cred -ScriptBlock { ... Get-Service -Name "Advanced Monitoring Agent" ... }`.
 
 ### A7 — Credenziali (punto 5)
 

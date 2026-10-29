@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-27T11:27:59Z",
+  "updated_at": "2026-10-29T12:00:00Z",
   "state": "active",
-  "phase": "Confronto con il partner",
-  "next_action": "Svolgere l'incontro e registrare decisioni e prossime attività."
+  "phase": "Deployment agente Agis Lab (pilota N-able completato)",
+  "next_action": "Attendere conferma fornitore su VETRO53-PC (console N-able), poi valutare estensione oltre i due piloti (VETRO71-PC, VETRO53-PC) solo dopo autorizzazione."
 }
