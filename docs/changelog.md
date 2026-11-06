@@ -291,3 +291,38 @@
 - Evidenze riferite esclusivamente a `VETRO53-PC`; non attribuite a `VETRO71-PC` risultati non documentati.
 - Distribuzione limitata a due piloti (`VETRO71-PC`, `VETRO53-PC`); nessuna estensione generale autorizzata.
 - Antivirus fuori scope di questa fase; verifica del fornitore in console in attesa di conferma.
+
+## 2026-11-06 — Sincronizzazione documentale attività 4–5/11/2026
+
+- **4 nuovi documenti in `docs/project/`** (sincronizzazione del 06/11; le verifiche descritte risalgono al 4–5/11/2026):
+  - `ambiente-ad-gpo-vetrodom.md` — dominio `Vetrodom.local`, DC01/DC02-VN, OU `OU=Computer,OU=Vetronaviglio`, 8 GPO incontrate nel materiale del 05/11, limiti di metodo del file di diagnosi, cronologia GPO.
+  - `inventario-nable-2026-11-04.md` — controllo su 63 computer: **12 con servizio agente `Running`**, **3 senza servizio** (VETRO06/07/32-PC), **48 non verificabili** (stato ignoto, non assente); perimetro dichiarato (2 piloti) vs stato osservato, senza dedurre la provenienza delle installazioni.
+  - `diagnosi-vetro27-rdp-2026-11-05.md` — GPO `CMP - RDP - Solo VETRO27-PC` creata e collegata (filtro `VETRO27-PC$`, `fDenyTSConnections=0`), test 3389 `False`, `Invoke-GPUpdate` fallito, **applicazione effettiva non verificata**; passo locale `gpupdate` solo **proposto**, non eseguito.
+  - `associazioni-utenti-pc-2026-11-04.md` — mappa autenticazioni NTLM (13 coppie PC/account) + utente console al controllo; chiarimento utente «Bettina» = `b.menditto`, `b.solitodesolis`/`c.solitodesolis` distinti.
+- `docs/_INDEX.md`: 4 righe di indice aggiunte.
+- `docs/project/project-status.json`: `updated_at` → 2026-11-06; attività aperte mantenute e distinte dalle attività del 29/10.
+- `AGENTS.md` (Current Focus) e `PROJECT_AI_NOTES.md`: checkpoint del 06/11/2026.
+- **Nessun CSV importato** in directory versionate: le evidenze restano citate per nome, data di raccolta, metodo e limiti, con percorso esterno non portabile. Nessun intervento remoto, nessun commit, nessun push.
+- **Restano da fare:** ruotare la chiave API Render committata in `opencode.json` (esponezione storica: la rimozione dal file non risolve l'esposizione); completare la verifica dell'applicazione della GPO RDP su VETRO27-PC; riconciliare l'origine degli agenti N-able fuori pilota.
+
+## 2026-11-06 — Stima consumo elettrico sala server (documento + integrazione dati reali)
+
+- **Nuovo documento** `docs/project/stima-consumo-elettrico-sala-server-2026-11-06.md`: tabella per apparato, calcoli IT → PUE → kWh → €, sensibilità, piano di misura, limiti.
+- **Dati reali raccolti in sola lettura** (06/11/2026):
+  - **IPMI/BMC `192.168.24.127`** (IPMI-SYNETO01, Supermicro/ATEN, sessione ADMIN): consumo **corrente 201 W**, media 1 h 197 W / 24 h 194 W / **7 gg 194 W**, min 179 W, max 7 gg 222 W, picco storico 280 W (24/08/2026), minimo 0 W (24/08, riavvio); **nessuna batteria** (BBP 0 s). Alimentatori: slot1 236 V/0,515 A → 109 W AC (87 W DC), slot2 238 V/0,421 A → 92 W AC (68 W DC) — somma 201 W coerente con la misura. Sensori: CPU1 45 °C, System 28 °C, MB_10G 55 °C, ventole 2900–3000 RPM, tensioni normali.
+  - **Console SynetoOS primario `192.168.24.126`** (Hyper 4.7.9.4550, ESXi 8.0.3): CPU 28,08%, memoria 85,01% (174/204,7 GB), pool `hybrid` 7,72 TB al 40,4%, 13 dischi green e 0 fault, 182 IOPS / 6,52 MB/s / 1,1 ms, cache hit 94,9%, 7 VM ospitate (6 ON, 1 OFF), snapshot 751,4 GB, repliche 173,6 GB. **La console non espone watt/corrente/tensione** (verificato su dashboard, `system/details.json` e Analytics: categorie System/Network/Drive/Pool/Dataset).
+- **Ricalibrazione della stima**: eliminato il **doppio conteggio** (SynetoOS, SynetoFileRecovery e VEEAM-VN sono VM/funzioni sui due chassis ESXi, non apparati separati) e sostituita la stima del server primario con la misura reale. Totale IT: **0,615 – 1,042 kW** (medio 0,83 kW) → **6,5 – 14,6 MWh/anno** (centrale ≈ 10,2 MWh, ≈ 2.540 €/anno a 0,25 €/kWh), rispetto a 12–29 MWh della stima preliminare.
+- **Residui aperti**: BMC del server secondario non raggiungibile (banner `.128` dichiara `.130`, ma `.130` = APP-DB-01; scan 443 della /24 senza altri login IPMI), SNMP 161 chiuso sul QNAP `.244`, UPS/PDU non censiti, PUE non misurato, collocazione di DC01/DC02 in sala non confermata, WatchGuard/switch solo stimati.
+- Nessuna modifica a impianti, UPS, PDU o console in modalità scrittura; nessun commit, nessun push.
+
+## 2026-11-06 — Spostamento `APP-DB-01` da `.130` a `.132` (risoluzione conflitto ARP con l'IPMI del secondario) + correzioni documentali
+
+- **Intervento eseguito dall'utente sul guest `app-db-01`** (backup preventivi di `docker-compose.yml`, `.env` e `/etc/network/interfaces`):
+  - le occorrenze di `192.168.24.130` erano **solo in `/srv/supabase/.env`** (`SUPABASE_PUBLIC_URL`, `API_EXTERNAL_URL`, `SITE_URL`, `PROXY_DOMAIN`); il `docker-compose.yml` usa variabili e non conteneva l'IP;
+  - IP secondario aggiunto senza downtime: `ip addr add 192.168.24.132/24 dev ens192` (ping e SSH verificati da fuori) → poi `sed` su `.env` e su `/etc/network/interfaces` → `restart networking` (chiude le sessioni SSH) → `docker compose up -d --force-recreate` su `/srv/supabase`.
+  - **Verifiche esterne**: `.132` risponde (MAC `00:0c:29:bc:50:50`), porte **8000** (envoy) e **5432** (pooler Postgres) open, `/storage/v1/status` → 200, `/api/health` → 401 (atteso: richiede chiave API); `.132` confermato **fuori pool DHCP** e **nessun client esterno** configurato sul vecchio `.130`.
+- **`.130` ora è libero ma muto**: nessuna risposta ARP, ping 100% loss, porte 22/80/443/5900/8080/8443 filtered; nella `/24` l'unico login IPMI ATEN è `.127` (BMC del primario) → **il BMC del secondario non è raggiungibile**: la diagnosi passa da "collisione ARP" a **probabile problema di cavi/porta o IP su altra VLAN** → verifica fisica in sala + lettura config IPMI da ESXi `.128` (richiede credenziale root).
+- **Correzioni documentali collegate**: `inventario-syneto-2026-10-12.md` §10.1 e §10.3, `fornitori-contratti.md` azione 11, `runbook.md` §B1, `stima-consumo-elettrico-sala-server-2026-11-06.md` §6.3 e §7 — la vecchia indicazione "riassegnare l'IP al BMC" è superata: l'IP `.130` era corretto, l'errore era l'assegnazione alla VM.
+- **Stima energia — rimozione di un residuo erroneo**: `DC01-VN`/`DC02-VN` **non sono server fisici in sala** ma **VM VMware ospitate sul chassis Syneto primario** (OUI VMware; `inventario-syneto` §3 e §11.3) → il loro consumo è **già dentro A1**; eliminata la voce "collocazione non confermata" e il relativo addizionamento +15–25%. **I totali non cambiano** (0,615–1,042 kW IT; 6,5–14,6 MWh/anno; ≈ 2.540 €/anno scenario centrale).
+- **Nota sicurezza (non trattata):** l'output `docker inspect` ha stampato segreti in chiaro (password Postgres, `JWT_SECRET`, `GOTRUE_JWT_SECRET`, chiavi S3, `DASHBOARD_PASSWORD`, `SERVICE_ROLE_KEY`) presenti anche in `/srv/docker/containers/*/config.v2.json` → **rotazione separata da pianificare** (invalida token e sessioni attive).
+- Nessun commit, nessun push; modifiche documentali locali.

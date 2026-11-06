@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-29T12:00:00Z",
+  "updated_at": "2026-11-06T00:00:00Z",
   "state": "active",
-  "phase": "Deployment agente Agis Lab (pilota N-able completato)",
-  "next_action": "Attendere conferma fornitore su VETRO53-PC (console N-able), poi valutare estensione oltre i due piloti (VETRO71-PC, VETRO53-PC) solo dopo autorizzazione."
+  "phase": "Ricognizione documentale e stima energetica della sala server (completate il 06/11/2026)",
+  "next_action": "Verifica fisica in sala del BMC/IPMI del server Syneto secondario: l'IP .130 (config di fabbrica) e' ora libero e muto dopo lo spostamento della VM APP-DB-01 a .132, quindi il blocco e' cablaggio/porta o VLAN; in parallelo misurare il QNAP .244 (SNMP 161 chiuso: wattmetro o abilitare SNMP) e censire UPS/PDU con l'elettricista (verificare l'impianto elettrico modificato a insaputa segnalato il 13/10). Restano aperti anche: (1) attendere conferma del fornitore su VETRO53-PC in console N-able, poi valutare estensione oltre i due piloti (VETRO71-PC, VETRO53-PC) solo dopo autorizzazione; (2) verificare l'applicazione effettiva della GPO CMP - RDP - Solo VETRO27-PC (test 3389 False al 05/11, Invoke-GPUpdate fallito, gpupdate locale solo proposto); (3) chiarire con il fornitore l'origine degli agenti N-able fuori pilota (12 servizi Running al 04/11 su 63 computer, 48 non verificabili); (4) ruotare la chiave API Render committata in opencode.json e pianificare la rotazione dei segreti Supabase esposti dall'output docker inspect."
 }

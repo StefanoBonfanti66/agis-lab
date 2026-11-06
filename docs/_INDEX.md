@@ -1,0 +1,28 @@
+# Agis Lab — Indice documentazione
+
+| Documento | Path | Note |
+|---|---|---|
+| Overview | [overview.md](./overview.md) | Overview primaria del progetto |
+| Banda fibra | [project/banda-fibra-upgrade.md](./project/banda-fibra-upgrade.md) | Analisi contratto P2P 200 Mega e opzioni di upgrade |
+| Specifiche parco | [project/specifiche-tecniche-parco.md](./project/specifiche-tecniche-parco.md) | Metodo e template specifiche PC fissi e mobili |
+| Email deliverability | [project/email-deliverability-checklist.md](./project/email-deliverability-checklist.md) | Checklist diagnostica Exchange Online + DNS (runbook EXO, §4 Step 0→7) |
+| Diagnostica caso Bettina | [../app/email-diagnostics/check_caso_bettina.ps1](../app/email-diagnostics/check_caso_bettina.ps1) | Script PowerShell di sola lettura per EXO: confronto fra le due caselle + message trace |
+| Email recap interno | [project/email-recap-video-call-agis-lab.md](./project/email-recap-video-call-agis-lab.md) | Recap 4 punti video call a Federico Rosi e Bettina, versione non tecnica — **inviato 28/09/2026 con variazioni** |
+| Overview PM | [project/overview.md](./project/overview.md) | Vista sintetica Project Management |
+| Runbook | [project/runbook.md](./project/runbook.md) | Procedure operative del progetto |
+| Rilievo WatchGuard | [project/rilievo-watchguard-2026-10-12.md](./project/rilievo-watchguard-2026-10-12.md) | Rilievo **in sola lettura** 2× Firebox M290 in FireCluster: stato, licenze (29/06/2028), servizi, firme, punti aperti — classificato come rilievo operativo/licenze, non audit di sicurezza |
+| Inventario Syneto | [project/inventario-syneto-2026-10-12.md](./project/inventario-syneto-2026-10-12.md) | **Integrazione 12/10** dei due PDF Agis Lab del 09/10 con la scan 01/10 (5 IP, serali, VM, storage, policy) + **console lette in sola lettura il 13/10 (§10–§11):** entrambi i pannelli, replica **bidirezionale online**, **`DIV-006` e `NET-024` chiuse**, 7+7 VM, pool secondario **degraded con disco guasto dal 24/12/2024** (azione #16) — evidenza `misurato`/`dichiarato` tenuta distinta |
+| Inventario Veeam | [project/inventario-veeam-2026-10-13.md](./project/inventario-veeam-2026-10-13.md) | **Rilievo 13/10 in sola lettura** file-level (SMB) **+ console RDP:** versione 12.2.0.334, **licenza Enterprise Plus valida fino al 29/03/2027 (10/10 istanze)**, matrice **14 job** (6 attivi ≤24 h, 5 morti — 2 Disabled/3 rimossi), retention 14 gg/cicli, repository QNAP + **copia offsite giornaliera su Wasabi `eu-central-2` bucket `vtrn/Veeam` (immutabilità 7 gg)** → **step B2 completo** (resta test restore) |
+| Riconciliazione fonti | [project/riconciliazione-fonti-2026-10-09.md](./project/riconciliazione-fonti-2026-10-09.md) | **Mappa ufficiale dei gap** (promossa 13/10): verifica conclusioni Fase 1, confronto fonti, §4 fornitori/credenziali, **matrice R01–R09** (mapping = 9 punti bozza, confermato 13/10), limiti |
+| Inventario M365 | [project/inventario-m365-2026-10-12.md](./project/inventario-m365-2026-10-12.md) | **Integrazione 12/10** del tenant Microsoft 365, con **raccolta EXO in sola lettura** (§1-bis): Tenant ID, `onmicrosoft.com`, 3 domini accettati, 89 destinatari, 35 licenziate, regole di trasporto con valori, antispam `MoveToJmf`, relay con IP, **DKIM del dominio primario assente**. Restano **portale** (licenze per piano, intestatario, scadenza, ruoli, MFA) e **`Boxafe`** |
+| Ambiente AD/GPO | [project/ambiente-ad-gpo-vetrodom.md](./project/ambiente-ad-gpo-vetrodom.md) | **Sincronizzazione 06/11/2026** (verifiche 4–5/11): dominio `Vetrodom.local`, DC01/DC02-VN, 8 GPO incontrate, cronologia del file di diagnosi RDP, limiti di metodo |
+| Inventario N-able | [project/inventario-nable-2026-11-04.md](./project/inventario-nable-2026-11-04.md) | **Controllo 04/11/2026** su 63 computer: 12 con agente `Running`, 3 senza servizio, **48 non verificabili** (stato ignoto); perimetro pilota vs stato osservato, senza dedurre la provenienza |
+| Diagnosi VETRO27 RDP | [project/diagnosi-vetro27-rdp-2026-11-05.md](./project/diagnosi-vetro27-rdp-2026-11-05.md) | **GPO `CMP - RDP - Solo VETRO27-PC`** creata e collegata (05/11): applicazione effettiva **non verificata**, `Invoke-GPUpdate` fallito, passo `gpupdate` locale solo **proposto** |
+| Associazioni utenti ↔ PC | [project/associazioni-utenti-pc-2026-11-04.md](./project/associazioni-utenti-pc-2026-11-04.md) | Mappa **autenticazioni NTLM 04/11/2026** (13 coppie PC/account) + utente console al controllo; "Bettina" = `b.menditto` (chiarimento utente), `b.`/`c.solitodesolis` distinti |
+| Stima consumo elettrico sala server | [project/stima-consumo-elettrico-sala-server-2026-11-06.md](./project/stima-consumo-elettrico-sala-server-2026-11-06.md) | Stima del consumo elettrico della sala server: tabella per apparato, calcoli IT→PUE→kWh→€, **ricalibrata con misura reale IPMI del server primario (194 W media 7 gg)** e carico letto in console SynetoOS; residui (secondario, QNAP, UPS/PDU, PUE) ancora da misurare |
+| Ledger | [admin/ledger.md](./admin/ledger.md) | Transazioni finanziarie |
+| Cashflow | [admin/cashflow.md](./admin/cashflow.md) | Movimenti di cassa |
+| Solleciti | [admin/solleciti.md](./admin/solleciti.md) | Solleciti di pagamento |
+| Leads | [leads/index.md](./leads/index.md) | Lead commerciali |
+| Fatture | [invoices/index.md](./invoices/index.md) | Fatture emesse |
+| Changelog | [changelog.md](./changelog.md) | Log delle modifiche |

@@ -151,8 +151,12 @@ email, il punto (3): **data EOL Windows 10 da verificare con fonte Microsoft**.
    letti (login root, sola lettura): **9 VM per host** — le 7 del pannello + `SynetoOS`
    (Solaris, guest `syneto-os-01`/`syneto-os-02`) + `SynetoFileRecovery` (CentOS,
    guest `syneto-lx-luna`), nascoste perché VM di sistema (§10.6, §11.3).
-   **Restano:** **BMC/IPMI del secondario con IP `.130` che collide con `APP-DB-01`**
-   (BMC non raggiungibile → **riassegnare IP BMC = per Agis/Syneto**, §10.1),
+   **Restano:** **BMC/IPMI del secondario non raggiungibile** — il BMC ha `.130`
+   configurato (config di fabbrica) ma l'IP era occupato dalla VM `APP-DB-01`:
+   **conflitto risolto il 06/11/2026 spostando la VM a `192.168.24.132`**
+   (Supabase verificato: 8000/5432 open, `/storage/v1/status` 200). `.130` ora è
+   **libero ma muto** → **verifica fisica di cavi/porta in sala** + lettura config
+   IPMI da ESXi `.128` (serve credenziale root) (§10.1),
    IP guest di Axtrax (VM spenta), `Serenity disabled` su entrambi, e — dal
    **portale Syneto Central letto il 13/10** — **maintenance SuperPro scaduta
    15/11/2025** + add-on Failover scaduto su `os-01` + Serenity Inactive
