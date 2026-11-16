@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-11-10T00:00:00Z",
+  "updated_at": "2026-11-16T00:00:00Z",
   "state": "active",
-  "phase": "Risposta email ad Agis Lab su controllo remoto, postazione mancante e mappatura utenti (bozza pronta, in attesa di invio)",
-  "next_action": "Inviare la bozza email ad Alessandro Viviano con: conferma agente N-able su VETRO06/07/38-PC (nessun intervento), VETRO43-PC identificata come postazione mancante da N-sight, mappatura PC↔utenti per 14 postazioni, VETRO01-PC attiva (s.bonfanti, 192.168.24.93), due server Linux (APP-DEV-01 Debian dev, APP-DB-01 Debian Supabase). Restano aperti da prima: (1) attendere conferma fornitore su VETRO53-PC in console N-able; (2) verificare applicazione effettiva GPO CMP - RDP - Solo VETRO27-PC; (3) chiarire origine agenti N-able fuori pilota; (4) ruotare chiave API Render in opencode.json."
+  "phase": "Risposta a richiesta credenziali amministrative ad Alessandro Viviano (14/11/2026): bozza di risposta pronta in docs/leads/, in attesa di validazione umana prima di consegna canale sicuro",
+  "next_action": "Validare bozza risposta credenziali (docs/leads/risposta-viviano-credenziali-amministrative-2026-11-16.md) con direzione/Bettina, poi consegnare aggiornamento credenziali via WeTransfer protetto + password telefono, registrare in changelog"
 }
