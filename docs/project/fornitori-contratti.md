@@ -42,6 +42,41 @@ Scheda compilata secondo il modello della Relazione Agis Lab §4 (servizi / cont
 
 ---
 
+### Aggiornamento 18/11/2026 — Server APP-DEV-01 e APP-DB-01 (collegato a "VM e applicazioni", azione #2)
+
+**Output tecnici del 16/11/2026 (rilievi diretti):**
+- APP-DEV-01: Debian 13 (banner); 19 container (14 running, 5 stopped); componenti: Listini, TDS, Headwind MDM con database dedicato, proxy intranet (porte host 80/443), Supabase smoke; Listini configurato con endpoint interno `http://192.168.24.132:8000`; Supabase smoke con riferimento al vecchio IP .130 (test locale 502); repo locali con modifiche non tracciate per Listini e TDS.
+- APP-DB-01: Debian GNU/Linux 13 (trixie), DEBIAN_VERSION_FULL=13.7; IP `192.168.24.132`; stack Supabase self-hosted 11 container healthy (PostgreSQL, Auth, PostgREST, Storage).
+
+**Dichiarazioni dirette di Stefano (18/11/2026):**
+- Listini: listino di vendita per ufficio commerciale e direzione.
+- TDS: ambiente di test per generare schede tecniche.
+- Headwind MDM: ambiente di test per configurare cellulari aziendali.
+- Accesso esclusivamente dalla rete aziendale (dichiarazione diretta, non verificato su firewall/NAT/VPN).
+- Nessuna integrazione con altri sistemi (salvo il collegamento interno Listini → backend Supabase su APP-DB-01, configurato ma non verificato come chiamate REST effettive).
+- Stefano si occupa personalmente di applicazioni e gestione sistemistica di entrambi i server Linux.
+
+**Punti non precisati:** chi utilizza TDS e Headwind MDM in test; se i test usano dati reali o di prova; dettaglio informazioni in Headwind MDM e storage Supabase.
+
+---
+
+### Aggiornamento 18/11/2026 — Urgenza sicurezza dati Martine (richiesta di Federico Rosi)
+
+**Dichiarazioni dirette di Stefano (18/11/2026):**
+- Backup di Martine: Completato secondo conferma diretta di Stefano (richiesta direzione del 16/11/2026, confermata telefonicamente da Alessandro). Copertura dichiarata: casella email di Martine (m.salins@vetronaviglio.it), solo posta, esclusi OneDrive e SharePoint. Evidenza tecnica su SRVFS-VN: nella console Veeam (Backups → Disk → Exported) risulta SRVFS-VN_2026-11-16, repository QNAP01-VN, data di creazione 16/11/2026 alle 11:39 (visione su console tramite Remmina, screenshot allegato da Stefano come riscontro). Conservazione senza consultazione dei contenuti. Non estendere la copertura a eventuali dati cloud esterni a questi ambiti. Non inventare retention, destinazione, test di ripristino o modalità di conservazione senza consultazione.
+- Riduzione accessi: Stefano dichiara "fatto". Stato: completato secondo conferma diretta. Nessun elenco di cartelle, gruppi o applicazioni interessati registrato.
+- Blocco USB / caricamenti cloud ed email personali: Stefano dichiara non disponibile un software per il blocco USB. Non registrato come applicato. Stato restrizioni cloud/email personali non precisato. Nessuna valutazione o implementazione da avviare automaticamente.
+- Email di ruolo: Stefano riferisce che Alessandro ha detto che se ne sarebbe occupato. Stato: in carico ad Alessandro, completamento non confermato. Da non confondere con il censimento Microsoft 365.
+- Telefonia: Stefano dichiara di non avere svolta attività. Stato: non eseguito da Stefano. Non attribuito automaticamente a un altro soggetto.
+- Account esterni: Stefano dichiara di non avere svolta attività. Stato: non eseguito da Stefano. Non risultano confermati censimento, cambi password o revoche.
+- Permessi del gestionale: Stefano dichiara "fatto, dati permessi solo per anagrafica". Registrato come conferma dell'intervento effettuato, con permessi limitati all'anagrafica. Non dedurte operazioni consentite sull'anagrafica né granularità dei dati visibili. Non presentare come ancora da inoltrare al fornitore.
+
+**Rettifica sulle credenziali:** la mail di Alessandro dichiara di non aver conservato copia delle credenziali ricevute prima della formalizzazione dell'incarico. Non sostituire con "aveva smarrito la password". Se esistono riferimenti diversi, mantenere separate le fonti. Non ipotizzare una terza consegna senza una richiesta successiva alla riconsegna del 16/11.
+
+**Output tecnici del 16/11/2026 presenti nel repo:** nessun documento nel workspace traccia un backup specifico della casella email o delle cartelle di rete/cloud di Martine, né riduzione accessi, blocco USB, email di ruolo, inventario telefonia o censimento account esterni riferiti a Martine.
+
+---
+
 ## 3. Azioni in corso / da avviare (tracciato)
 
 | # | Azione | Proprietario | Stato |
@@ -55,7 +90,7 @@ Scheda compilata secondo il modello della Relazione Agis Lab §4 (servizi / cont
 | 5 | Coordinamento Elabora/Prodware (accesso admin gestionale) | Da definire con direzione | ✅ Risolto (Elabora/Prodware ok) |
 | 6 | **Recupero materiali storici Bonfanti** da dispositivi/servizi (autorizzazione + perimetro con vertenza) | Direzione → Stefano | ✅ **Autorizzato 23/09** — accesso ai materiali storici ottenuto; da recuperare e inventariare |
 | 7 | Modello censimento licenze: chiedere se Agis Lab dispone di un modulo standard | Stefano → Agis Lab | ⏳ Da chiedere (domanda 9 risposte) |
-| 8 | **Canale consegna credenziali ad Agis Lab** (documento cifrato, password su canale separato; custode) — il doc IT Impresa va trasferito in sicurezza, MAI via email in chiaro | Stefano → Agis Lab | ✅ **Consegna 08/10/2026** — `Vetronviglio.docx` via **WeTransfer con link protetto da password**, password comunicata **telefonicamente**; ricezione + visualizzazione confermate da Alessandro Viviano. Canale valido per le consegne successive. Bitwarden non è più previsto. **16/11/2026: riconsegna `Vetronviglio.docx` (Viviano aveva smarrito la password) via WeTransfer protetto + password telefonica; bozza di accompagnamento `docs/leads/risposta-viviano-credenziali-amministrative-2026-11-16.md` in attesa di validazione umana.** |
+| 8 | **Canale consegna credenziali ad Agis Lab** (documento cifrato, password su canale separato; custode) — il doc IT Impresa va trasferito in sicurezza, MAI via email in chiaro | Stefano → Agis Lab | ✅ **Consegna 08/10/2026** — `Vetronviglio.docx` via **WeTransfer con link protetto da password**, password comunicata **telefonicamente**; ricezione + visualizzazione confermate da Alessandro Viviano. Canale valido per le consegne successive. Bitwarden non è più previsto. **16/11/2026: riconsegna `Vetronviglio.docx` (Viviano aveva smarrito la password) via WeTransfer protetto + password telefonica; bozza di accompagnamento validata dall'utente (`docs/leads/risposta-viviano-credenziali-amministrative-2026-11-16.md`), in attesa di invio manuale da parte di Stefano dopo validazione interna Bettina/direzione.** |
 | 9 | Raccordo amministrazione: contratti e fatture per tutti i fornitori (**incluso hosting ServerPlan**; **contratto IT Impresa disponibile da allegare**) | Amministrazione/acquisti | 🔴 Da avviare |
 | 10 | Definizione referenti e poteri autorizzativi (Bettina autorizza, Federico coordina) | Direzione | ⏳ Da formalizzare in Fase 0 |
 | 11 | **Verifica discrepanze IP consegna IT Impresa** (~~Veeam-VN .227 vs .135~~; Axtrax-VN; host .247/.249 inattivi) | Stefano | 🟡 **Veeam risolto il 12/10**; **Axtrax-VN confermata OFF in console 13/10** (IP guest n/d finché spenta; hostname = `.227` in scan); `NET-024` **`.127` = IPMI principale chiusa 13/10**; **`.130` risolta con ARP 13/10 = `APP-DB-01`** → **aggiornamento 06/11/2026:** la VM `APP-DB-01` aveva `.130` hardcoded e il BMC del secondario è configurato con lo stesso IP (config di fabbrica, simmetrica a `.127` del primario) → **conflitto ARP risolto spostando la VM a `192.168.24.132`** (stack Supabase ricreato e verificato: 8000/5432 open, `/storage/v1/status` 200). `.130` ora è **libero ma muto** (nessuna ARP, porte 22/80/443/5900/8080/8443 filtered, nessun altro IPMI ATEN nella /24 oltre `.127`) → **non serve riassegnare l'IP al BMC**: residua la **verifica fisica di cavi/porta** del BMC del secondario e l'eventuale lettura della config IPMI da ESXi `.128` (richiede credenziale root); **`.247`/`.249` CHIUSI 13/10: entrambi vivi e identificati = due switch** (`.247` **HP** — eHTTP + Mocana NanoSSH, OUI HPE; `.249` **Enterasys C5124**) → la consegna IT Impresa li dava inattivi, non è più così → vedi [`inventario-syneto-2026-10-12.md`](./inventario-syneto-2026-10-12.md) §6/§10/§11. Resta solo l'IP guest di **Axtrax** (VM spenta) |

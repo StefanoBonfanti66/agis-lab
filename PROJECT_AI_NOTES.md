@@ -297,3 +297,37 @@ Richieste: (1) verifica upgrade banda, (2) specifiche tecniche PC fissi e mobili
 - **Correzione stima energia:** `DC01-VN`/`DC02-VN` **non sono server fisici in sala** ma **VM VMware ospitate sul chassis primario** (OUI VMware; `inventario-syneto` §3/§11.3) → consumo già dentro A1 → eliminata la voce "collocazione non confermata" e l'addizionamento +15–25%. **Totali invariati**: IT 0,615–1,042 kW; 6,5–14,6 MWh/anno; ≈ 2.540 €/anno (scenario centrale a 0,25 €/kWh).
 - **Nota sicurezza:** l'output `docker inspect` ha stampato segreti in chiaro (password Postgres, `JWT_SECRET`, `GOTRUE_JWT_SECRET`, chiavi S3, `DASHBOARD_PASSWORD`, `SERVICE_ROLE_KEY`) presenti anche in `/srv/docker/containers/*/config.v2.json` → **rotazione separata da pianificare** (invalida sessioni/token).
 - **Nessun commit, nessun push.**
+
+## Checkpoint 2026-11-18 — Distribuzione agente N-able su 3 PC in giallo di Viviano
+
+- Distribuzione eseguita manualmente da Stefano (nessun comando OpenCode, nessun intervento remoto da questa piattaforma) sui 3 PC segnalati "in giallo" da Alessandro Viviano:
+  - `CFO_PEZZONI` — 192.168.24.46 — verifica ore 11:27 circa
+  - `VETRO50-PC` — 192.168.24.97 — verifica ore 12:10 circa
+  - `DV-PC` — 192.168.24.99 — verifica ore 12:15 circa
+- Su tutti e tre `sc.exe \\NOME-PC query "Advanced Monitoring Agent"` ha restituito: STATO 4 RUNNING, CODICE_USCITA_WIN32 0, CODICE_USCITA_SERVIZIO 0.
+- Prima della distribuzione: `VETRO50-PC` e `DV-PC` restituivano errore 1060 (servizio non installato); `CFO_PEZZONI` non risultava nell'elenco precedente alla distribuzione.
+- Pacchetto: `AGENT_705740_V10_15_3_RW.EXE`, 4.429.368 byte, SHA256 `BA6280D628476DEF1F1C62AFA3EEB9069ACD169BE0E66A038647CCF12294715F`. Firma verificata sulla copia di `CFO_PEZZONI`: valida, firmatario N-able Technologies Ltd. Percorso usato sui PC: `C:\Windows\Temp\AGIS_Nable_20261118.exe`. Copia su `VETRO50-PC` verificata con hash coincidente; su `DV-PC` confermato avvio processo e servizio RUNNING (output "OK: copia verificata" non riportato in chat).
+- Metodo: PsExec Microsoft v2.43 dal domain controller, in PowerShell amministrativa: `& 'C:\Tools\PSTools\PsExec64.exe' \\NOME-PC -n 15 -s -d 'C:\Windows\Temp\AGIS_Nable_20261118.exe'`. Avvio come SYSTEM, senza opzione `-i` e senza parametri aggiunti all'installer. Nessun comando di riavvio impartito.
+- PID restituiti: CFO_PEZZONI 17976, VETRO50-PC 23908, DV-PC 8048.
+- Comando di verifica usato: `sc.exe \\NOME-PC query "Advanced Monitoring Agent"`.
+- Tentativi precedenti su CFO_PEZZONI (falliti): impacket psexec.py da Ubuntu (errore "Error performing the uninstallation, cleaning up", file di supporto zTCzIbzA.exe, servizio PpFC non enumerato, rimozione non verificata), CIM/WMI via DCOM dal DC (errore 0x800706BA server RPC non disponibile), schtasks remoto ("Impossibile trovare il percorso di rete"). PsExec Microsoft dal DC: riuscito.
+- Modifica all'host ubuntu zbn-srv01: installato python3-impacket, script trovati in /usr/share/doc/python3-impacket/examples/ — questo metodo non è quello che ha portato alla distribuzione riuscita.
+- Limiti e verifiche ancora aperte: stato locale dei servizi confermato sui tre PC; registrazione e comunicazione con la console N-able NON ancora verificate; cliente/sito di assegnazione in console NON ancora verificato; versione effettivamente installata NON rilevata (non dedurla dal solo nome del pacchetto); nessuna pulizia degli installer residui documentata.
+- Non modificare lo stato delle verifiche hardware o dei JSON inventariali: questa attività non ne dimostra il completamento.
+
+
+## Stato corrispondenza con Viviano (aggiornato 18/11/2026)
+
+- **Censimento postazioni e agenti N-able:** risposta inviata a Viviano (bozza `docs/leads/risposta-viviano-credenziali-amministrative-2026-11-16.md` superata dal testo effettivamente inviato da Stefano).
+- **Server APP-DEV-01 e APP-DB-01:** risposta inviata a Viviano prima della richiesta di aggiornamento a OpenCode (bozza locale superata dal testo effettivamente inviato).
+
+## Checkpoint 2026-11-18 — Obiettivo operatività N-able da Ubuntu zbn-srv01 (solo documentazione)
+
+- **Obiettivo:** Stefano desidera gestire le prossime operazioni N-able dal terminale Ubuntu `zbn-srv01`, con il supporto di OpenCode, senza aprire manualmente sessioni sul domain controller o sui PC.
+- **Alternative da valutare (da registrare, nessuna verifica da eseguire):**
+  1. **Ubuntu → PC Windows direttamente:** trasferimento SMB da Ubuntu riuscito (copia di `AGENT_705740_V10_15_3_RW.EXE` su `\\CFO_PEZZONI\C$\Windows\Temp\AGIS_Nable_20261118.exe`). Esecuzione tramite Impacket da Ubuntu: **non valida**. Tentativo `psexec.py` con `whoami.exe` fallito con `Exception: Pipe not ready, aborting` sulla pipe `\RemCom_communicaton`. Lettura registro Defender sul PC (da Stefano, tramite PsExec Microsoft dal DC): evento 1116 rilevamento `C:\Windows\MZFYbvTl.exe` come `VirTool:Win32/RemoteExec!pz` (supporto RemCom di Impacket, non il pacchetto N-able); evento 1117 del 18/11/2026 12:41:13, azione "Metti in quarantena" completata. Il blocco Defender è documentato: **non riprovare, non proporre esclusioni, ripristino dalla quarantena, disattivazioni o sostituzioni per aggirare il blocco**. Questo non implica che ogni metodo Ubuntu → Windows sia impossibile. Da valutare la fattibilità, i prerequisiti (WinRM 5985, credenziali, TrustedHosts) e la modalità senza password in chiaro.
+  2. **Ubuntu → host Windows di gestione → PC:** mantenendo il metodo PsExec Microsoft già riuscito dal domain controller (Pacchetto `AGENT_705740_V10_15_3_RW.EXE`, SHA256 `BA6280D628476DEF1F1C62AFA3EEB9069ACD169BE0E66A038647CCF12294715F`, servizio `Advanced Monitoring Agent` STATO 4 RUNNING su CFO_PEZZONI/VETRO50-PC/DV-PC il 18/11/2026). Collegamento da terminale Ubuntu a un host Windows di gestione: non ancora verificato né predisposto.
+- **Vincoli:** nessuna password in comandi, script, repository o log; nessuna interazione desktop utente; nessuna garanzia di assenza assoluta di notifiche di sicurezza; nessuna disattivazione di antivirus o firewall; nessuna installazione automatica di componenti sul domain controller; destinatari espliciti, verifica del pacchetto e verifica finale del servizio.
+- **Limite di questa sessione:** attività limitata a DOCUMENTAZIONE: registrare obiettivo e alternative da valutare. Nessuna verifica remota, nessuna modifica infrastrutturale, nessuna distribuzione.
+
+- Controllo locale su zbn-srv01 (eseguito, sola lettura, nessun host remoto contattato, nulla installato): l'interprete `/usr/bin/python3` non espone i moduli `winrm` né `paramiko` (entrambi assenti). Questo esito non verifica connessioni o credenziali e non modifica alcunché.

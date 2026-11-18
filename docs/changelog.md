@@ -325,5 +325,32 @@
 - **Correzioni documentali collegate**: `inventario-syneto-2026-10-12.md` §10.1 e §10.3, `fornitori-contratti.md` azione 11, `runbook.md` §B1, `stima-consumo-elettrico-sala-server-2026-11-06.md` §6.3 e §7 — la vecchia indicazione "riassegnare l'IP al BMC" è superata: l'IP `.130` era corretto, l'errore era l'assegnazione alla VM.
 - **Stima energia — rimozione di un residuo erroneo**: `DC01-VN`/`DC02-VN` **non sono server fisici in sala** ma **VM VMware ospitate sul chassis Syneto primario** (OUI VMware; `inventario-syneto` §3 e §11.3) → il loro consumo è **già dentro A1**; eliminata la voce "collocazione non confermata" e il relativo addizionamento +15–25%. **I totali non cambiano** (0,615–1,042 kW IT; 6,5–14,6 MWh/anno; ≈ 2.540 €/anno scenario centrale).
 - **Nota sicurezza (non trattata):** l'output `docker inspect` ha stampato segreti in chiaro (password Postgres, `JWT_SECRET`, `GOTRUE_JWT_SECRET`, chiavi S3, `DASHBOARD_PASSWORD`, `SERVICE_ROLE_KEY`) presenti anche in `/srv/docker/containers/*/config.v2.json` → **rotazione separata da pianificare** (invalida token e sessioni attive).
-- **16/11/2026 — Riconsegna credenziali ad Agis Lab (Alessandro Viviano):** `Vetronviglio.docx` riconsegnato via **WeTransfer con link protetto da password**, password comunicata **telefonicamente** (Viviano aveva smarrito la password precedente). Canale sicuro confermato: file protetto + password su canale secondario, nulla via email in chiaro. Bozza di accompagnamento: `docs/leads/risposta-viviano-credenziali-amministrative-2026-11-16.md` (in attesa di validazione umana Bettina/direzione).
+- **16/11/2026 — Riconsegna credenziali ad Agis Lab (Alessandro Viviano):** `Vetronviglio.docx` riconsegnato via **WeTransfer con link protetto da password**, password comunicata **telefonicamente** (Viviano aveva smarrito la password precedente). Canale sicuro confermato: file protetto + password su canale secondario, nulla via email in chiaro. Bozza di accompagnamento: `docs/leads/risposta-viviano-credenziali-amministrative-2026-11-16.md` (**validata dall'utente il 16/11/2026**, in attesa di validazione interna Bettina/direzione prima dell'invio manuale).
 - Nessun commit, nessun push; modifiche documentali locali.
+
+## 2026-11-17 — Ricezione mail di Alessandro Viviano su censimento parco macchine
+
+- Ricevuta mail da Alessandro Viviano (data non esplicita, ricevuta il 17/11/2026) con riscontro sul censimento parco e elenco allegato PC→utente. Punti sollevati:
+  1. Utenti in giallo nella Sua console non rilevati → chiede installazione forzata agent (serve elenco postazioni).
+  2. VETRO42-PC (utente in rosso) non nel mio elenco ma nel Suo censimento agent → associazione VETRO42-PC → **qualita**, da confermare/aggiornare.
+  3. Totale postazioni: **26** (Sue) vs **24** mie iniziali (+2) → mio conteggio attuale 22 postazioni + 1 muletto VETRO71-PC = 23, discrepanza da riconciliare.
+  4. VETRO06-PC, VETRO07-PC, VETRO32-PC, VETRO38-PC: agent installato ma non raggiungibile → chiede reinstallazione agent.
+  5. Postazione ACQUISTI: menzionata nella mail del 14/10 ma non nel mio elenco né nel Suo censimento → chiarito come **smart working via VPN**, LAN domestica `192.168.1.0/24`, non routingabile dal server di sede.
+- Redatta bozza di risposta punto per punto: `docs/leads/risposta-viviano-censimento-parco-2026-11-17.md` (**BOZZA**, in attesa di validazione umana Bettina/direzione prima di invio manuale).
+- Aggiornati `docs/project/project-status.json` (nuova fase e next_action).
+- Nessun commit, nessun push; modifiche documentali locali.
+
+## 2026-11-18 — Distribuzione agente N-able su 3 PC in giallo di Viviano
+
+- Distribuzione eseguita manualmente da Stefano (nessun comando OpenCode, nessun intervento remoto da questa piattaforma) sui 3 PC segnalati "in giallo" da Alessandro Viviano: `CFO_PEZZONI` (192.168.24.46, ore 11:27 circa), `VETRO50-PC` (192.168.24.97, ore 12:10 circa), `DV-PC` (192.168.24.99, ore 12:15 circa).
+- Su tutti e tre `sc.exe \\NOME-PC query "Advanced Monitoring Agent"` ha restituito: STATO 4 RUNNING, CODICE_USCITA_WIN32 0, CODICE_USCITA_SERVIZIO 0. Prima della distribuzione `VETRO50-PC` e `DV-PC` restituivano errore 1060 (servizio non installato); `CFO_PEZZONI` non risultava nell'elenco precedente.
+- Pacchetto: `AGENT_705740_V10_15_3_RW.EXE`, 4.429.368 byte, SHA256 `BA6280D628476DEF1F1C62AFA3EEB9069ACD169BE0E66A038647CCF12294715F`. Firma verificata su `CFO_PEZZONI`: valida, firmatario N-able Technologies Ltd. Percorso: `C:\Windows\Temp\AGIS_Nable_20261118.exe`. Copia verificata con hash coincidente su `VETRO50-PC`; su `DV-PC` confermato avvio processo e servizio RUNNING.
+- Metodo: PsExec Microsoft v2.43 dal domain controller, PowerShell amministrativa, avvio come SYSTEM senza `-i` né parametri all'installer. Nessun riavvio impartito.
+- Limiti e verifiche ancora aperte: comunicazione con la console N-able NON ancora verificata; versione effettivamente installata NON rilevata; nessuna pulizia degli installer residui documentata.
+- Nessun commit, nessun push; modifiche documentali locali.
+
+## 2026-11-18 — Obiettivo operatività N-able da Ubuntu zbn-srv01 (solo documentazione)
+
+- Registrato nuovo obiettivo: gestire operazioni N-able dal terminale Ubuntu `zbn-srv01` (OpenCode), valutando separatamente (1) Ubuntu → PC Windows direttamente e (2) Ubuntu → host Windows di gestione → PC (metodo PsExec Microsoft già riuscito).
+- Vincoli documentati: nessuna password in comandi/script/repo/log; nessuna interazione desktop utente; nessuna disattivazione di antivirus/firewall; nessuna installazione automatica di componenti sul DC; destinatari espliciti, verifica del pacchetto, verifica finale del servizio.
+- Attività limitata a documentazione: nessuna verifica remota, nessuna modifica infrastrutturale, nessuna distribuzione. Registrato in `AGENTS.md` Current Focus e `PROJECT_AI_NOTES.md`.
